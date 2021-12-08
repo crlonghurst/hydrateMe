@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Arrangement.Absolute.Center
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.AbsoluteCutCornerShape
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.MaterialTheme.typography
@@ -54,6 +55,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.input.KeyboardType
 import com.longhurst.hydrateme.data.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.coroutineContext
@@ -97,13 +99,31 @@ class MainActivity : AppCompatActivity() {
             Row(Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)){
                 Text(text = "Current Weight: ")
                 Box(Modifier.border(5.dp, Black, RectangleShape)){
-                    TextField(value = weight, onValueChange = { weight = it; totalDrinks(weight.toFloat(), hours.toFloat()) })
+                    TextField(value = weight,
+                            onValueChange = {
+                                weight = it;
+                                if (weight != "" && hours != "") {
+                                    totalDrinks(weight.toFloat(), hours.toFloat())
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                    keyboardType = KeyboardType.Number
+                    ))
                 }
             }
             Row(Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)){
                 Text(text = "How long will you be outdoors?")
-                Box(Modifier.border(5.dp, Black, RectangleShape)){
-                    TextField(value = hours, onValueChange = { hours = it; totalDrinks(weight.toFloat(), hours.toFloat());})
+                Box(Modifier.border(5.dp, Black, RectangleShape)) {
+                    TextField(value = hours,
+                            onValueChange = {
+                                weight = it;
+                                if (weight != "" && hours != "") {
+                                    totalDrinks(weight.toFloat(), hours.toFloat())
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                    keyboardType = KeyboardType.Number
+                            ))
                 }
             }
 //            Row(

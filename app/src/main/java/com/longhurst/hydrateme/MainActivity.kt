@@ -47,7 +47,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
-import com.longhurst.hydrateme.data.Schedule
 import com.longhurst.hydrateme.ui.theme.HydrateMeTheme
 import java.time.LocalDateTime
 import androidx.compose.runtime.getValue
@@ -55,9 +54,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Brush
-import com.longhurst.hydrateme.data.AppDatabase
-import com.longhurst.hydrateme.data.DatabaseBuilder
-import com.longhurst.hydrateme.data.DatabaseHelperImpl
+import com.longhurst.hydrateme.data.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.coroutineContext
 
@@ -100,13 +97,13 @@ class MainActivity : AppCompatActivity() {
             Row(Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)){
                 Text(text = "Current Weight: ")
                 Box(Modifier.border(5.dp, Black, RectangleShape)){
-                    TextField(value = weight, onValueChange = { weight = it })
+                    TextField(value = weight, onValueChange = { weight = it; totalDrinks(weight.toFloat(), hours.toFloat()) })
                 }
             }
             Row(Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)){
                 Text(text = "How long will you be outdoors?")
                 Box(Modifier.border(5.dp, Black, RectangleShape)){
-                    TextField(value = hours, onValueChange = { hours = it })
+                    TextField(value = hours, onValueChange = { hours = it; totalDrinks(weight.toFloat(), hours.toFloat());})
                 }
             }
 //            Row(
@@ -256,7 +253,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-
         }
     }
 }

@@ -1,6 +1,9 @@
 package com.longhurst.hydrateme.data
 
 import android.util.Log
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.BASIC_ISO_DATE
 import kotlin.math.ceil
 
 //This file should contain all sorts of different functions for handling how much someone is supposed to drink
@@ -26,4 +29,8 @@ fun totalDrinks(weight: Float, hours: Float){
 
     val ounces = amountByWeight(weight)
     val drinks = amountofDrinks(ounces) + drinksFromExercise(hours)
+    val date = LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE)
+
+
+
 }

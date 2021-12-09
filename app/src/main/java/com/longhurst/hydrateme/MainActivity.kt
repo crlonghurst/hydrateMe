@@ -38,6 +38,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.lifecycleScope
 import com.longhurst.hydrateme.data.*
 import kotlinx.coroutines.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.coroutines.coroutineContext
 
 
@@ -53,9 +55,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dbHelper = DatabaseHelperImpl(DatabaseBuilder.getInstance(applicationContext))
-        GlobalScope.launch {
-//            dbHelper.upsert(Schedule(1, "Test", 5F, 5F, 5F, false, 5, true))
-            schedules.addAll(dbHelper.getAll()) }
+        GlobalScope.launch { schedules.addAll(dbHelper.getAll()) }
         setContent {
             HydrateMeTheme {
                 navController = rememberNavController()
@@ -93,9 +93,7 @@ class MainActivity : AppCompatActivity() {
                 Text(text = "How long will you be outdoors?")
                 Box(Modifier.border(5.dp, Black, RectangleShape)) {
                     TextField(value = hours,
-                            onValueChange = {
-                                hours = it;
-                            },
+                            onValueChange = { hours = it; },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                     keyboardType = KeyboardType.Number
                             ))
@@ -109,7 +107,10 @@ class MainActivity : AppCompatActivity() {
                         onClick = {
                             if (weight != "" && hours != "") {
                                 val schedule = createSchedule(weight.toFloat(), hours.toFloat());
-                                lifecycleScope.launchWhenResumed { dbHelper.upsert(schedule) }
+                                lifecycleScope.launchWhenResumed {
+                                    dbHelper.upsert(schedule)
+                                    schedules.addAll(dbHelper.getAll())
+                                }
                                 navController.navigate("main")
                             }
                                   }
@@ -178,7 +179,8 @@ class MainActivity : AppCompatActivity() {
                             )
                         )
                     }
-                    val currentSchedules = schedules.filter { it.active }
+                    val currentSchedules = schedules.filter { it.id == LocalDateTime.now().format(
+                        DateTimeFormatter.BASIC_ISO_DATE).toInt() && it.active }
                     Row() {
                         LazyColumn(
                             contentPadding = PaddingValues(
@@ -250,12 +252,18 @@ class MainActivity : AppCompatActivity() {
                         .padding(16.dp)
                         .align(CenterVertically)
                         ){
-                    Button(onClick = {
-                        val drink = Schedule(listItem.id, listItem.scheduleName,
-                                listItem.userWeight, listItem.outdoorTime, listItem.waterAmount,
-                                listItem.recurring, listItem.drinksNeeded, listItem.active, listItem.drinksTaken + 1)
-                        lifecycleScope.launchWhenResumed { dbHelper.upsert(drink) }}) {
-                        Text(text = "Drink!")
+                    if(listItem.drinksTaken <= listItem.drinksNeeded) {
+                        Button(onClick = {
+                            listItem.drinksTaken += 1
+                            if (listItem.drinksTaken >= listItem.drinksNeeded) listItem.active =
+                                false
+                            lifecycleScope.launchWhenResumed { dbHelper.upsert(listItem) }
+                        }) {
+                            Text(text = "Drink!")
+                        }
+                    }
+                    else{
+                        Text(text = "Congrats on hydrating!!")
                     }
                 }
                 Column(

@@ -13,6 +13,6 @@ class Schedule (
     @ColumnInfo(name = "waterAmount") val waterAmount: Float,
     @ColumnInfo(name = "recurring") val recurring: Boolean,
     @ColumnInfo(name = "drinksNeeded") val drinksNeeded: Int,
-    @ColumnInfo(name = "active") val active: Boolean,
+    @ColumnInfo(name = "active") var active: Boolean,
     @ColumnInfo(name = "drinksTaken") var drinksTaken: Int,
 )

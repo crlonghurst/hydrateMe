@@ -25,14 +25,14 @@ fun drinksFromExercise(hours: Float): Float{
     return hours * 3
 }
 
-fun totalDrinks(weight: Float, hours: Float){
+fun createSchedule(weight: Float, hours: Float):Schedule{
 
     val ounces = amountByWeight(weight)
     val drinks = amountofDrinks(ounces) + drinksFromExercise(hours)
     val date = LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE).toInt()
     Log.e("TESTTESTDRINKS", date.toString())
 
-    var schedule = Schedule(date, "default", weight, hours, ounces, true, drinks.toInt(),  true, 0)
+    return Schedule(date, "default", weight, hours, ounces, true, drinks.toInt(),  true, 0)
 
 
 

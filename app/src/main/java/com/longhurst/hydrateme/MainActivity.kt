@@ -1,44 +1,27 @@
 package com.longhurst.hydrateme
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
-import android.graphics.Color
-import android.graphics.Rect
 import android.os.Bundle
-import android.widget.DatePicker
-import android.widget.EditText
-import android.widget.TimePicker
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement.Absolute.Center
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.AbsoluteCutCornerShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.MaterialTheme.typography
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
-import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Black
-import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.input.key.Key.Companion.Calendar
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontFamily.Companion.Serif
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -46,16 +29,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.timepicker.MaterialTimePicker
 import com.longhurst.hydrateme.ui.theme.HydrateMeTheme
-import java.time.LocalDateTime
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.lifecycle.lifecycleScope
 import com.longhurst.hydrateme.data.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.coroutineContext
@@ -102,9 +82,7 @@ class MainActivity : AppCompatActivity() {
                     TextField(value = weight,
                             onValueChange = {
                                 weight = it;
-                                if (weight != "" && hours != "") {
-                                    totalDrinks(weight.toFloat(), hours.toFloat())
-                                }
+
                             },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                     keyboardType = KeyboardType.Number
@@ -117,9 +95,6 @@ class MainActivity : AppCompatActivity() {
                     TextField(value = hours,
                             onValueChange = {
                                 hours = it;
-                                if (weight != "" && hours != "") {
-                                    totalDrinks(weight.toFloat(), hours.toFloat())
-                                }
                             },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                     keyboardType = KeyboardType.Number
@@ -130,9 +105,15 @@ class MainActivity : AppCompatActivity() {
                 Modifier
                     .padding(0.dp, 10.dp, 0.dp, 0.dp)
                     .align(CenterHorizontally)){
-                Button({
-                    navController.navigate("main")
-                }) {
+                Button(
+                        onClick = {
+                            if (weight != "" && hours != "") {
+                                val schedule = createSchedule(weight.toFloat(), hours.toFloat());
+                                lifecycleScope.launchWhenResumed { dbHelper.upsert(schedule) }
+                                navController.navigate("main")
+                            }
+                                  }
+                ) {
                     Text(text = "New Schedule")
                 }
             }
@@ -261,8 +242,7 @@ class MainActivity : AppCompatActivity() {
                         .padding(16.dp)
                         .align(CenterVertically)
                 ){
-                    Text(text = listItem.scheduleName, style = typography.h6)
-                    Text(text = "Drinks needed ${listItem.drinksNeeded}", style = typography.caption)
+                    Text(text = "Drink every ${ 720 / listItem.drinksNeeded} minutes", style = typography.caption)
 
                 }
                 Column (
@@ -270,9 +250,22 @@ class MainActivity : AppCompatActivity() {
                         .padding(16.dp)
                         .align(CenterVertically)
                         ){
-                    Button(onClick = { /*TODO*/ }) {
+                    Button(onClick = {
+                        val drink = Schedule(listItem.id, listItem.scheduleName,
+                                listItem.userWeight, listItem.outdoorTime, listItem.waterAmount,
+                                listItem.recurring, listItem.drinksNeeded, listItem.active, listItem.drinksTaken + 1)
+                        lifecycleScope.launchWhenResumed { dbHelper.upsert(drink) }}) {
                         Text(text = "Drink!")
                     }
+                }
+                Column(
+                        modifier = Modifier
+                                .padding(16.dp)
+                                .align(CenterVertically)
+                ){
+
+                    Text(text = "Drinks Taken ${listItem.drinksTaken}", style = typography.caption)
+
                 }
             }
         }

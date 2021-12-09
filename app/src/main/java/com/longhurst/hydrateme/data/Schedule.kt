@@ -14,5 +14,5 @@ class Schedule (
     @ColumnInfo(name = "recurring") val recurring: Boolean,
     @ColumnInfo(name = "drinksNeeded") val drinksNeeded: Int,
     @ColumnInfo(name = "active") val active: Boolean,
-    @ColumnInfo(name = "drinksTaken") val drinksTaken: Int,
+    @ColumnInfo(name = "drinksTaken") var drinksTaken: Int,
 )

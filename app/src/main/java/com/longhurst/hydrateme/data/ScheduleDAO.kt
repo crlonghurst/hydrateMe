@@ -12,13 +12,12 @@ interface ScheduleDAO {
 
     @Query("""
         SELECT id FROM Schedule
-        WHERE :id NOT IN
-        (SELECT id FROM Schedule)""")
+        WHERE id = :id""")
     suspend fun checkIfExists(id: Int) : List<Int>
 
-    @Update()
+    @Update
     suspend fun updateSchedule(schedule: Schedule)
 
-    @Delete()
+    @Delete
     suspend fun delete(schedule: Schedule)
 }

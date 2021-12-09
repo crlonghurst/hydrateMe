@@ -126,14 +126,16 @@ class MainActivity : AppCompatActivity() {
                             ))
                 }
             }
-//            Row(
-//                Modifier
-//                    .padding(0.dp, 10.dp, 0.dp, 0.dp)
-//                    .align(CenterHorizontally)){
-//                Button({ newSchedule() }) {
-//                    Text(text = "add more times")
-//                }
-//            }
+            Row(
+                Modifier
+                    .padding(0.dp, 10.dp, 0.dp, 0.dp)
+                    .align(CenterHorizontally)){
+                Button({
+                    navController.navigate("main")
+                }) {
+                    Text(text = "New Schedule")
+                }
+            }
             Row(
                 Modifier
                     .padding(0.dp, 10.dp, 0.dp, 0.dp)

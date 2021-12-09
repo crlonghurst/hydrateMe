@@ -1,6 +1,7 @@
 package com.longhurst.hydrateme
 
 import android.os.Bundle
+import android.text.format.DateFormat.format
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -39,8 +40,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.lifecycleScope
 import com.longhurst.hydrateme.data.*
 import kotlinx.coroutines.*
+import java.lang.String.format
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -256,6 +260,9 @@ class MainActivity : AppCompatActivity() {
                     .padding(16.dp)
             ){
                 Text(text = listItem.scheduleName, style = typography.h6)
+                val dateTime = Date()
+                val formatter = DateTimeFormatter.ofPattern("E")
+                Text(text = LocalDate.parse(listItem.id.toString(), formatter).toString())
                 Text(text = "Drinks you took ${listItem.drinksTaken} drinks out of ${listItem.drinksNeeded}", style = typography.caption)
             }
         }

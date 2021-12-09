@@ -1,6 +1,7 @@
 package com.longhurst.hydrateme
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -40,7 +41,6 @@ import com.longhurst.hydrateme.data.*
 import kotlinx.coroutines.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.coroutines.coroutineContext
 
 
 class MainActivity : AppCompatActivity() {
@@ -55,7 +55,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dbHelper = DatabaseHelperImpl(DatabaseBuilder.getInstance(applicationContext))
-        GlobalScope.launch { schedules.addAll(dbHelper.getAll()) }
+        GlobalScope.launch {
+//            schedules.add(Schedule(20211207,"Not used", 180F, 12F, 12, false, 8))
+//            schedules.add(Schedule(20211207,"Not used", 170F, 8F, 14, false, 9))
+//            schedules.add(Schedule(20211201,"Not used", 220F, 19F, 24, false, 12))
+//            schedules.forEach { dbHelper.upsert(it) }
+            schedules.addAll(dbHelper.getAll())
+        }
         setContent {
             HydrateMeTheme {
                 navController = rememberNavController()
@@ -74,16 +80,20 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun schedule(){
         Column(){
+            var name: String by rememberSaveable{ mutableStateOf("Name") }
             var weight: String by rememberSaveable{ mutableStateOf("0") }
             var hours: String by rememberSaveable{ mutableStateOf("0") }
             Row(Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)){
                 Text(text = "Current Weight: ")
                 Box(Modifier.border(5.dp, Black, RectangleShape)){
+                    TextField(value = name, onValueChange = { name = it } )
+                }
+            }
+            Row(Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)){
+                Text(text = "Current Weight: ")
+                Box(Modifier.border(5.dp, Black, RectangleShape)){
                     TextField(value = weight,
-                            onValueChange = {
-                                weight = it;
-
-                            },
+                            onValueChange = { weight = it },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                     keyboardType = KeyboardType.Number
                     ))
@@ -93,7 +103,7 @@ class MainActivity : AppCompatActivity() {
                 Text(text = "How long will you be outdoors?")
                 Box(Modifier.border(5.dp, Black, RectangleShape)) {
                     TextField(value = hours,
-                            onValueChange = { hours = it; },
+                            onValueChange = { hours = it },
                             keyboardOptions = KeyboardOptions.Default.copy(
                                     keyboardType = KeyboardType.Number
                             ))
@@ -105,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                     .align(CenterHorizontally)){
                 Button(
                         onClick = {
-                            if (weight != "" && hours != "") {
+                            if (name.isNotEmpty() && weight.toFloat() > 0 && hours.toFloat() >= 0) {
                                 val schedule = createSchedule(weight.toFloat(), hours.toFloat());
                                 lifecycleScope.launchWhenResumed {
                                     dbHelper.upsert(schedule)
@@ -113,7 +123,8 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 navController.navigate("main")
                             }
-                                  }
+                            else Toast.makeText(applicationContext, "You must have valid data", Toast.LENGTH_LONG).show()
+                        }
                 ) {
                     Text(text = "New Schedule")
                 }
@@ -128,16 +139,36 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    @Composable
-    fun newSchedule(){
-
-    }
     @ExperimentalFoundationApi
     @Composable
     fun history(){
         Surface(color = MaterialTheme.colors.background) {
             Column(){
-                val currentSchedules = schedules.filter { !it.recurring }
+                val yesterdaySchedules = schedules.filter { it.id == LocalDateTime.now().minusDays(1).format(DateTimeFormatter.BASIC_ISO_DATE).toInt() }
+                val weeksSchedule = schedules.filter {
+                    it.id < LocalDateTime.now().minusDays(1).format(DateTimeFormatter.BASIC_ISO_DATE).toInt()
+                            &&
+                    it.id > LocalDateTime.now().minusDays(8).format(DateTimeFormatter.BASIC_ISO_DATE).toInt()
+                }
+                Row() {
+                    Text(text = "Yesterday's Schedules")
+                }
+                Row() {
+                    LazyColumn(
+                        contentPadding = PaddingValues(
+                            horizontal = 16.dp,
+                            vertical = 8.dp
+                        )
+                    ) {
+                        items(yesterdaySchedules.size,
+                            itemContent = {
+                                HistoryListItem(listItem = yesterdaySchedules[it])
+                            })
+                    }
+                }
+                Row() {
+                    Text(text = "Last Week's Schedules")
+                }
                 Row(){
                     LazyColumn(
                         contentPadding = PaddingValues(
@@ -145,9 +176,9 @@ class MainActivity : AppCompatActivity() {
                             vertical = 8.dp
                         )
                     ) {
-                        items(currentSchedules.size,
+                        items(weeksSchedule.size,
                             itemContent = {
-                                HistoryListItem(listItem = currentSchedules[it])
+                                HistoryListItem(listItem = weeksSchedule[it])
                             })
                     }
                 }
@@ -214,7 +245,8 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun HistoryListItem(listItem: Schedule){
         Card(
-            modifier = Modifier.padding(horizontal = 0.dp, vertical = 8.dp)
+            modifier = Modifier
+                .padding(horizontal = 0.dp, vertical = 8.dp)
                 .fillMaxWidth(),
             elevation = 5.dp,
             shape = AbsoluteCutCornerShape(corner = CornerSize(5.dp))
@@ -224,7 +256,7 @@ class MainActivity : AppCompatActivity() {
                     .padding(16.dp)
             ){
                 Text(text = listItem.scheduleName, style = typography.h6)
-                Text(text = "Drinks you took ${listItem.drinksNeeded}", style = typography.caption)
+                Text(text = "Drinks you took ${listItem.drinksTaken} drinks out of ${listItem.drinksNeeded}", style = typography.caption)
             }
         }
     }
@@ -245,7 +277,6 @@ class MainActivity : AppCompatActivity() {
                         .align(CenterVertically)
                 ){
                     Text(text = "Drink every ${ 720 / listItem.drinksNeeded} minutes", style = typography.caption)
-
                 }
                 Column (
                     modifier = Modifier
@@ -268,8 +299,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 Column(
                         modifier = Modifier
-                                .padding(16.dp)
-                                .align(CenterVertically)
+                            .padding(16.dp)
+                            .align(CenterVertically)
                 ){
 
                     Text(text = "Drinks Taken ${listItem.drinksTaken}", style = typography.caption)

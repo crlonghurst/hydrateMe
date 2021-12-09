@@ -32,7 +32,7 @@ fun createSchedule(weight: Float, hours: Float):Schedule{
     val date = LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE).toInt()
     Log.e("TESTTESTDRINKS", date.toString())
 
-    return Schedule(date, "default", weight, hours, ounces, true, drinks.toInt(),  true, 0)
+    return Schedule(date, "default", weight, hours, drinks.toInt(),  true, 0)
 
 
 

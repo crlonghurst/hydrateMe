@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity() {
                 Box(Modifier.border(5.dp, Black, RectangleShape)) {
                     TextField(value = hours,
                             onValueChange = {
-                                weight = it;
+                                hours = it;
                                 if (weight != "" && hours != "") {
                                     totalDrinks(weight.toFloat(), hours.toFloat())
                                 }

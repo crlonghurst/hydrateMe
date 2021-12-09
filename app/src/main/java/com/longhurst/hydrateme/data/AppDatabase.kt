@@ -5,7 +5,7 @@ import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 
 
-@Database(entities = [Schedule::class], version = 3)
+@Database(entities = [Schedule::class], version = 4)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun scheduleDAO(): ScheduleDAO
 }

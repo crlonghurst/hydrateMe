@@ -38,13 +38,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
 import com.longhurst.hydrateme.data.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.flowOf
 import java.lang.String.format
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.Flow
 
 
 class MainActivity : AppCompatActivity() {
@@ -64,7 +67,7 @@ class MainActivity : AppCompatActivity() {
 //            schedules.add(Schedule(20211207,"Not used", 170F, 8F, 14, false, 9))
 //            schedules.add(Schedule(20211201,"Not used", 220F, 19F, 24, false, 12))
 //            schedules.forEach { dbHelper.upsert(it) }
-            schedules.addAll(dbHelper.getAll())
+            refresh()
         }
         setContent {
             HydrateMeTheme {
@@ -88,7 +91,7 @@ class MainActivity : AppCompatActivity() {
             var weight: String by rememberSaveable{ mutableStateOf("0") }
             var hours: String by rememberSaveable{ mutableStateOf("0") }
             Row(Modifier.padding(0.dp, 10.dp, 0.dp, 0.dp)){
-                Text(text = "Current Weight: ")
+                Text(text = "Schedule Name: ")
                 Box(Modifier.border(5.dp, Black, RectangleShape)){
                     TextField(value = name, onValueChange = { name = it } )
                 }
@@ -123,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                                 val schedule = createSchedule(weight.toFloat(), hours.toFloat());
                                 lifecycleScope.launchWhenResumed {
                                     dbHelper.upsert(schedule)
-                                    schedules.addAll(dbHelper.getAll())
+                                    refresh()
                                 }
                                 navController.navigate("main")
                             }
@@ -260,9 +263,10 @@ class MainActivity : AppCompatActivity() {
                     .padding(16.dp)
             ){
                 Text(text = listItem.scheduleName, style = typography.h6)
-                val dateTime = Date()
-                val formatter = DateTimeFormatter.ofPattern("E")
-                Text(text = LocalDate.parse(listItem.id.toString(), formatter).toString())
+                val formatter1 = DateTimeFormatter.BASIC_ISO_DATE
+                val dateTime = LocalDate.parse(listItem.id.toString(), formatter1)
+                val formatter2 = DateTimeFormatter.ofPattern("E")
+                Text(text = dateTime.format(formatter2).toString())
                 Text(text = "Drinks you took ${listItem.drinksTaken} drinks out of ${listItem.drinksNeeded}", style = typography.caption)
             }
         }
@@ -284,6 +288,7 @@ class MainActivity : AppCompatActivity() {
                         .align(CenterVertically)
                 ){
                     Text(text = "Drink every ${ 720 / listItem.drinksNeeded} minutes", style = typography.caption)
+                    Text(text= "To reach ${listItem.drinksNeeded}  today", style = typography.caption)
                 }
                 Column (
                     modifier = Modifier
@@ -295,7 +300,10 @@ class MainActivity : AppCompatActivity() {
                             listItem.drinksTaken += 1
                             if (listItem.drinksTaken >= listItem.drinksNeeded) listItem.active =
                                 false
-                            lifecycleScope.launchWhenResumed { dbHelper.upsert(listItem) }
+                            lifecycleScope.launchWhenResumed {
+                                dbHelper.upsert(listItem)
+                                navController.navigate("main")
+                            }
                         }) {
                             Text(text = "Drink!")
                         }
@@ -315,5 +323,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+    suspend fun refresh(){
+        schedules.clear()
+        schedules.addAll(dbHelper.getAll())
     }
 }
